@@ -140,3 +140,10 @@ class StochasticGridworld:
 
 def default_gridworld() -> StochasticGridworld:
     return StochasticGridworld()
+
+
+def temporal_difference_gridworld() -> StochasticGridworld:
+    return StochasticGridworld(
+        water_cells=frozenset({(1, 1), (1, 2)}),
+        wildfire_cells=frozenset({(0, 2), (0, 3)}),
+    )

@@ -4,6 +4,7 @@ from decision_making.gridworld import (
     StochasticGridworld,
     Transition,
     default_gridworld,
+    temporal_difference_gridworld,
 )
 from decision_making.imitation import (
     DaggerResult,
@@ -19,9 +20,22 @@ from decision_making.planning import (
     policy_iteration,
     value_iteration,
 )
+from decision_making.temporal_difference import (
+    ActorCriticResult,
+    ControlResult,
+    actor_action_probabilities,
+    policy_from_q_values,
+    state_features,
+    train_actor_critic,
+    train_q_learning,
+    train_sarsa,
+    train_sarsa_lambda,
+)
 
 __all__ = [
     "ACTIONS",
+    "ActorCriticResult",
+    "ControlResult",
     "DaggerResult",
     "Episode",
     "EpisodeStep",
@@ -29,11 +43,19 @@ __all__ = [
     "State",
     "StochasticGridworld",
     "Transition",
+    "actor_action_probabilities",
     "default_gridworld",
     "policy_evaluation_exact",
     "policy_evaluation_iterative",
+    "policy_from_q_values",
     "policy_iteration",
     "run_dagger",
     "simulate_episode",
+    "state_features",
+    "temporal_difference_gridworld",
+    "train_actor_critic",
+    "train_q_learning",
+    "train_sarsa",
+    "train_sarsa_lambda",
     "value_iteration",
 ]

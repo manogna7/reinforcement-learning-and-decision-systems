@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -50,12 +51,13 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
 
 
 def _save_plot(iterations: list[int], accuracies: list[float], path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    os.environ.setdefault("MPLCONFIGDIR", str((path.parent / ".matplotlib").resolve()))
     import matplotlib
 
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
-    path.parent.mkdir(parents=True, exist_ok=True)
     figure, axis = plt.subplots(figsize=(8, 5))
     axis.plot(iterations, accuracies, marker="o")
     axis.set_title("DAgger policy agreement")
