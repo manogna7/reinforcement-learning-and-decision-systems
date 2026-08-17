@@ -28,6 +28,12 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--seed", type=int, default=17)
     parser.add_argument("--max-episode-steps", type=int, default=500)
     parser.add_argument(
+        "--summary-window",
+        type=int,
+        default=10,
+        help="Number of trailing episodes used for the final reward summary.",
+    )
+    parser.add_argument(
         "--plot",
         type=Path,
         default=Path("artifacts/temporal-difference-learning-curves.png"),
@@ -67,6 +73,19 @@ def _moving_average(values: np.ndarray, window: int = 5) -> np.ndarray:
     return np.convolve(values, np.ones(window) / window, mode="valid")
 
 
+def _summarize_final_window(
+    reward_matrix: np.ndarray,
+    window: int,
+) -> tuple[float, float, int]:
+    if reward_matrix.ndim != 2 or 0 in reward_matrix.shape:
+        raise ValueError("Reward data must be a non-empty trial-by-episode matrix.")
+    if window <= 0:
+        raise ValueError("The summary window must be positive.")
+    effective_window = min(window, reward_matrix.shape[1])
+    trial_means = reward_matrix[:, -effective_window:].mean(axis=1)
+    return float(trial_means.mean()), float(trial_means.std()), effective_window
+
+
 def _save_plot(results: dict[str, np.ndarray], path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     os.environ.setdefault("MPLCONFIGDIR", str((path.parent / ".matplotlib").resolve()))
@@ -101,8 +120,10 @@ def _save_plot(results: dict[str, np.ndarray], path: Path) -> None:
 
 def main(argv: Sequence[str] | None = None) -> None:
     args = parse_args(argv)
-    if args.episodes <= 0 or args.trials <= 0:
-        raise SystemExit("Episodes and trials must be positive.")
+    if args.episodes <= 0 or args.trials <= 0 or args.max_episode_steps <= 0:
+        raise SystemExit("Episodes, trials, and the rollout horizon must be positive.")
+    if args.summary_window <= 0:
+        raise SystemExit("The summary window must be positive.")
 
     configurations: dict[str, tuple[Trainer, dict[str, float]]] = {
         "SARSA": (
@@ -141,10 +162,13 @@ def main(argv: Sequence[str] | None = None) -> None:
             parameters=parameters,
         )
         results[name] = rewards
-        final_rewards = rewards[:, -1]
+        reward_mean, reward_deviation, effective_window = _summarize_final_window(
+            rewards,
+            args.summary_window,
+        )
         print(
-            f"{name}: final reward={final_rewards.mean():.2f} "
-            f"+/- {final_rewards.std():.2f}; "
+            f"{name}: last {effective_window} episodes reward="
+            f"{reward_mean:.2f} +/- {reward_deviation:.2f}; "
             f"truncated episodes={truncated}"
         )
 
